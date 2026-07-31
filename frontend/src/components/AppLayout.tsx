@@ -52,20 +52,27 @@ export const AppLayout: React.FC = () => {
     }
   })();
 
-  const firstName = (() => {
+  // Extract role or user name dynamically from stored user object
+  const userRoleDisplay = (() => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || 'null') as Record<string, unknown> | null;
-      if (!user) {
-        return 'User';
-      }
+      if (!user) return 'User';
 
-      return (
+      // 1. Try to get role from user.role (Matches your Postman API: "role": "admin")
+      const rawRole = typeof user.role === 'string' ? user.role : undefined;
+      
+      // 2. Fallbacks for name if available
+      const name =
         (typeof user.firstName === 'string' && user.firstName) ||
         (typeof user.first_name === 'string' && user.first_name) ||
-        (typeof user.name === 'string' && user.name) ||
-        (typeof user.username === 'string' && user.username) ||
-        'User'
-      );
+        (typeof user.name === 'string' && user.name);
+
+      if (rawRole) {
+        // Capitalize role: "admin" -> "Admin", "user" -> "User"
+        return rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+      }
+
+      return name || 'User';
     } catch {
       return 'User';
     }
@@ -254,7 +261,7 @@ export const AppLayout: React.FC = () => {
 
           <div className="mb-6 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3">
             <p className="text-xs text-slate-500">Signed in as</p>
-            <p className="mt-1 truncate text-sm font-medium text-slate-200">{firstName}</p>
+            <p className="mt-1 truncate text-sm font-medium text-slate-200 capitalize">{userRoleDisplay}</p>
           </div>
 
           <nav className="flex-1 space-y-1.5">
