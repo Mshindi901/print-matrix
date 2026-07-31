@@ -52,27 +52,42 @@ export const AppLayout: React.FC = () => {
     }
   })();
 
-  // Extract role or user name dynamically from stored user object
-  const userRoleDisplay = (() => {
+  // Extract role or user name dynamically from stored session/user object
+  const userDisplayLabel = (() => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || 'null') as Record<string, unknown> | null;
+      // 1. Try reading directly from 'user' or nested inside 'authSession'
+      const rawUser = localStorage.getItem('user');
+      const rawSession = localStorage.getItem('authSession');
+
+      let user: Record<string, unknown> | null = null;
+
+      if (rawUser) {
+        user = JSON.parse(rawUser) as Record<string, unknown>;
+      } else if (rawSession) {
+        const session = JSON.parse(rawSession) as Record<string, unknown>;
+        user = (session.user as Record<string, unknown>) || null;
+      }
+
       if (!user) return 'User';
 
-      // 1. Try to get role from user.role (Matches your Postman API: "role": "admin")
+      // 2. Check for 'role' inside user object ("role": "admin")
       const rawRole = typeof user.role === 'string' ? user.role : undefined;
-      
-      // 2. Fallbacks for name if available
+
+      // 3. Check for name properties if available
       const name =
         (typeof user.firstName === 'string' && user.firstName) ||
         (typeof user.first_name === 'string' && user.first_name) ||
-        (typeof user.name === 'string' && user.name);
+        (typeof user.name === 'string' && user.name) ||
+        (typeof user.username === 'string' && user.username);
+
+      if (name) return name;
 
       if (rawRole) {
-        // Capitalize role: "admin" -> "Admin", "user" -> "User"
+        // Capitalize: "admin" -> "Admin", "user" -> "User"
         return rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
       }
 
-      return name || 'User';
+      return 'User';
     } catch {
       return 'User';
     }
@@ -261,7 +276,7 @@ export const AppLayout: React.FC = () => {
 
           <div className="mb-6 rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-3">
             <p className="text-xs text-slate-500">Signed in as</p>
-            <p className="mt-1 truncate text-sm font-medium text-slate-200 capitalize">{userRoleDisplay}</p>
+            <p className="mt-1 truncate text-sm font-medium text-slate-200 capitalize">{userDisplayLabel}</p>
           </div>
 
           <nav className="flex-1 space-y-1.5">
