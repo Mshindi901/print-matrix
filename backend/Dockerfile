@@ -12,4 +12,4 @@ COPY . .
 # Expose Express server port
 EXPOSE 9000
 
-CMD ["node", "server.js"] # Replace index.js with your backend entry point (e.g. server.js)
+CMD ["node", "server.js"]
