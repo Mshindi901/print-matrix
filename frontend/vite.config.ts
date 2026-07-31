@@ -3,9 +3,6 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import {VitePWA} from 'vite-plugin-pwa'
 
-const apiBaseUrl = process.env.VITE_API_BASE_URL || '/printer/api'
-const remotePath = apiBaseUrl.replace(/^https?:\/\/[^/]+/, '') || '/printer/api'
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
