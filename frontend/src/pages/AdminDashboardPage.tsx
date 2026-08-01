@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Activity, FileText, PlusCircle, Printer as PrinterIcon, Users, X } from 'lucide-react';
 import { apiService, getApiErrorMessage } from '../services/api';
-import type { Printer, User } from '../types';
+import type { Printer, PrintAgent, User } from '../types';
 
 type AdminStatistics = {
   totalUsers: number;
@@ -31,21 +31,29 @@ export const AdminDashboardPage = () => {
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [printersLoading, setPrintersLoading] = useState(true);
   const [printersError, setPrintersError] = useState('');
+  const [agents, setAgents] = useState<PrintAgent[]>([]);
+  const [agentsLoading, setAgentsLoading] = useState(true);
+  const [agentsError, setAgentsError] = useState('');
   const [showAddPrinter, setShowAddPrinter] = useState(false);
+  const [showAddAgent, setShowAddAgent] = useState(false);
   const [savingPrinter, setSavingPrinter] = useState(false);
+  const [savingAgent, setSavingAgent] = useState(false);
   const [printerError, setPrinterError] = useState('');
+  const [agentError, setAgentError] = useState('');
   const [printerForm, setPrinterForm] = useState({
     name: '', location: '', ipAddress: '', agentId: '',
   });
+  const [agentForm, setAgentForm] = useState({ location: '' });
 
   useEffect(() => {
     let isMounted = true;
     const loadDashboardData = async () => {
       try {
-        const [statsResult, usersResult, printersResult] = await Promise.allSettled([
+        const [statsResult, usersResult, printersResult, agentsResult] = await Promise.allSettled([
           apiService.admin.getDashboardStats(),
           apiService.admin.getAllUsers({ limit: 50 }),
           apiService.printers.list(),
+          apiService.agents.list(),
         ]);
 
         if (isMounted) {
@@ -68,18 +76,26 @@ export const AdminDashboardPage = () => {
           } else {
             setPrintersError('Unable to load printers right now.');
           }
+
+          if (agentsResult.status === 'fulfilled') {
+            setAgents(agentsResult.value.data.data ?? []);
+          } else {
+            setAgentsError('Unable to load agents right now.');
+          }
         }
       } catch {
         if (isMounted) {
           setError('Unable to load admin statistics right now.');
           setUsersError('Unable to load users right now.');
           setPrintersError('Unable to load printers right now.');
+          setAgentsError('Unable to load agents right now.');
         }
       } finally {
         if (isMounted) {
           setLoading(false);
           setUsersLoading(false);
           setPrintersLoading(false);
+          setAgentsLoading(false);
         }
       }
     };
@@ -99,7 +115,7 @@ export const AdminDashboardPage = () => {
     { label: 'Pages printed', value: statistics.totalPagesPrinted, icon: PrinterIcon },
   ];
 
-  const addPrinter = async (event: React.FormEvent) => {
+  const addPrinter = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPrinterError('');
     setSavingPrinter(true);
@@ -115,6 +131,23 @@ export const AdminDashboardPage = () => {
     }
   };
 
+  const addAgent = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAgentError('');
+    setSavingAgent(true);
+
+    try {
+      const response = await apiService.agents.create(agentForm);
+      setAgents((current) => [response.data.data, ...current]);
+      setShowAddAgent(false);
+      setAgentForm({ location: '' });
+    } catch (err: unknown) {
+      setAgentError(getApiErrorMessage(err));
+    } finally {
+      setSavingAgent(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -122,9 +155,14 @@ export const AdminDashboardPage = () => {
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <p className="mt-1 text-sm text-slate-400">System-wide printing and usage overview.</p>
         </div>
-        <button type="button" onClick={() => setShowAddPrinter(true)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500">
-          <PlusCircle className="h-4 w-4" /> Add printer
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={() => setShowAddAgent(true)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500">
+            <PlusCircle className="h-4 w-4" /> Add print agent
+          </button>
+          <button type="button" onClick={() => setShowAddPrinter(true)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500">
+            <PlusCircle className="h-4 w-4" /> Add printer
+          </button>
+        </div>
       </div>
       {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">{error}</div>}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -140,7 +178,7 @@ export const AdminDashboardPage = () => {
         Average print time: <span className="font-medium text-white">{loading ? '...' : statistics.averagePrintTime}</span>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-3">
         <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
@@ -191,6 +229,45 @@ export const AdminDashboardPage = () => {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Agents</h2>
+              <p className="mt-1 text-sm text-slate-400">Print agents created in the system.</p>
+            </div>
+            <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{agents.length} agents</span>
+          </div>
+
+          {agentsLoading ? (
+            <p className="text-sm text-slate-400">Loading agents...</p>
+          ) : agentsError ? (
+            <p className="text-sm text-rose-400">{agentsError}</p>
+          ) : agents.length === 0 ? (
+            <p className="text-sm text-slate-400">No agents found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] divide-y divide-slate-800 text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent ID</th>
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">API Key</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {agents.map((agent) => (
+                    <tr key={String(agent.id)} className="text-slate-300">
+                      <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{String(agent.id)}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{agent.location || '-'}</td>
+                      <td className="py-3 px-4 whitespace-nowrap break-all text-ellipsis">{agent.api_key || agent.apiKey || '-'}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -257,6 +334,29 @@ export const AdminDashboardPage = () => {
               ))}
             </div>
             <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setShowAddPrinter(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">Cancel</button><button disabled={savingPrinter} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{savingPrinter ? 'Adding...' : 'Add printer'}</button></div>
+          </form>
+        </div>
+      )}
+
+      {showAddAgent && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-4">
+          <form onSubmit={addAgent} className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div><h2 className="text-lg font-semibold text-white">Add print agent</h2><p className="mt-1 text-sm text-slate-400">Create a new print agent location.</p></div>
+              <button type="button" onClick={() => setShowAddAgent(false)} className="p-1 text-slate-400 hover:text-white"><X className="h-5 w-5" /></button>
+            </div>
+            {agentError && <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{agentError}</div>}
+            <label className="text-sm text-slate-300 block">
+              <span className="mb-1 block">Agent location</span>
+              <input
+                required
+                type="text"
+                value={agentForm.location}
+                onChange={(event) => setAgentForm({ location: event.target.value })}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white"
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setShowAddAgent(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">Cancel</button><button disabled={savingAgent} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{savingAgent ? 'Adding...' : 'Add agent'}</button></div>
           </form>
         </div>
       )}

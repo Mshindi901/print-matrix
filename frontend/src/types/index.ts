@@ -17,7 +17,14 @@ export interface AuthResponse {
   user?: User;
   userId?: string;
 }
-
+export interface PrintAgent {
+  id: string;
+  location: string;
+  apiKey?: string;
+  api_key?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 export type PrinterStatus = 'active' | 'inactive' | 'offline' | 'maintenance';
 
 export interface Printer {

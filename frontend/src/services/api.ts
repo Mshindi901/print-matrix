@@ -192,6 +192,10 @@ type PrinterCreatePayload = {
   agentId: string;
 };
 
+type PrintAgentCreatePayload = {
+  location: string;
+};
+
 type PrintJobPayload = {
   printerId: string;
   fileId: string;
@@ -242,6 +246,18 @@ export const apiService = {
       api.post<{ success: boolean; message: string; printer: Printer }>('/printers', payload),
     updateStatus: (printerId: string, payload: PrinterStatusUpdatePayload) =>
       api.patch<{ success: boolean; message: string }>(`/printers/${printerId}/status`, payload),
+  },
+
+  agents: {
+    list: () => api.get<{ success: boolean; message: string; data: PrintAgent[] }>('/all/agent'),
+    get: (agentId: string) => api.get<{ success: boolean; message: string; data: PrintAgent }>(`/agent/${agentId}`),
+    create: (payload: PrintAgentCreatePayload) =>
+      api.post<{ success: boolean; message: string; data: PrintAgent }>('/agent', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+    delete: (agentId: string) => api.delete<{ success: boolean; message: string }>(`/agent/${agentId}`),
   },
 
   printJobs: {
