@@ -96,7 +96,10 @@ export const AppLayout: React.FC = () => {
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: BarChart3 },
     { name: 'Jobs', href: '/print-jobs', icon: FileText },
-    ...(isAdmin ? [{ name: 'Printers', href: '/printers', icon: Printer }, { name: 'Admin', href: '/admin', icon: ShieldCheck }] : []),
+    ...(isAdmin ? [
+      { name: 'Printers', href: '/printers', icon: Printer },
+      { name: 'Admin', href: '/admin', icon: ShieldCheck },
+    ] : []),
   ];
 
   const loadModalOptions = async () => {

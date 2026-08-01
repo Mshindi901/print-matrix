@@ -40,13 +40,14 @@ export const get_agent = async(req, res) => {
 
 export const get_all_agents = async(req, res) => {
     try {
-        const agents = await Print_Agent.findALl();
-        if(!agents || agents.length === 0){
-            return res.status(400).json({success:false,message:'API failed or No agents records yet'});
-        };
-        return res.status(200).json({success:true,message:'Agents Fethced', data:agents});
+        const agents = await Print_Agent.findAll();
+        if (!agents) {
+            return res.status(200).json({ success: true, message: 'Agents fetched', data: [] });
+        }
+        return res.status(200).json({ success: true, message: 'Agents fetched', data: agents });
     } catch (error) {
-        return res.status(500).json({success:false,message:'Internal Server Error',error:error})
+        console.error('Fetching agents failed:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error', error });
     }
 };
 

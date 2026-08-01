@@ -35,6 +35,7 @@ export const AdminDashboardPage = () => {
   const [agents, setAgents] = useState<PrintAgent[]>([]);
   const [agentsLoading, setAgentsLoading] = useState(true);
   const [agentsError, setAgentsError] = useState('');
+  const [activeSection, setActiveSection] = useState<'overview' | 'users' | 'agents' | 'printers'>('overview');
   const [showAddPrinter, setShowAddPrinter] = useState(false);
   const [showAddAgent, setShowAddAgent] = useState(false);
   const [savingPrinter, setSavingPrinter] = useState(false);
@@ -166,21 +167,189 @@ export const AdminDashboardPage = () => {
         </div>
       </div>
       {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">{error}</div>}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-            <Icon className="h-5 w-5 text-indigo-400" />
-            <p className="mt-4 text-sm text-slate-400">{label}</p>
-            <p className="mt-1 text-2xl font-semibold text-white">{loading ? '...' : value}</p>
-          </div>
+
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+        {([
+          ['overview', 'Overview'],
+          ['users', 'Users'],
+          ['agents', 'Agents'],
+          ['printers', 'Printers'],
+        ] as const).map(([section, label]) => (
+          <button
+            key={section}
+            type="button"
+            onClick={() => setActiveSection(section)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeSection === section ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-300 hover:bg-slate-900'}`}
+          >
+            {label}
+          </button>
         ))}
       </div>
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm text-slate-300">
-        Average print time: <span className="font-medium text-white">{loading ? '...' : statistics.averagePrintTime}</span>
-      </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      {activeSection === 'overview' && (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {cards.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                <Icon className="h-5 w-5 text-indigo-400" />
+                <p className="mt-4 text-sm text-slate-400">{label}</p>
+                <p className="mt-1 text-2xl font-semibold text-white">{loading ? '...' : value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm text-slate-300">
+            Average print time: <span className="font-medium text-white">{loading ? '...' : statistics.averagePrintTime}</span>
+          </div>
+        </>
+      )}
+
+      {activeSection !== 'overview' && (
+        <div className="grid gap-6 xl:grid-cols-3">
+          {activeSection === 'users' && (
+            <section id="users" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Users</h2>
+                  <p className="mt-1 text-sm text-slate-400">All registered users in the system.</p>
+                </div>
+                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{users.length} users</span>
+              </div>
+
+              {usersLoading ? (
+                <p className="text-sm text-slate-400">Loading users...</p>
+              ) : usersError ? (
+                <p className="text-sm text-rose-400">{usersError}</p>
+              ) : users.length === 0 ? (
+                <p className="text-sm text-slate-400">No users found.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-800 text-sm">
+                    <thead>
+                      <tr className="text-left text-slate-400">
+                        <th className="pb-3 font-medium">first_name</th>
+                        <th className="pb-3 font-medium">last_name</th>
+                        <th className="pb-3 font-medium">email</th>
+                        <th className="pb-3 font-medium">Phone</th>
+                        <th className="pb-3 font-medium">is_active</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {users.map((user) => {
+                        const userRecord = user as User & Record<string, unknown>;
+                        const firstName = (userRecord.firstName as string | undefined) || (userRecord.first_name as string | undefined) || '—';
+                        const lastName = (userRecord.lastName as string | undefined) || (userRecord.last_name as string | undefined) || '—';
+                        const phone = (userRecord.phone as string | undefined) || '—';
+                        const isActive = userRecord.isActive ?? userRecord.is_active;
+                        const statusLabel = isActive === true ? 'Active' : isActive === false ? 'Inactive' : '—';
+
+                        return (
+                          <tr key={user.userId} className="text-slate-300">
+                            <td className="py-3 pr-3 font-medium text-white">{firstName}</td>
+                            <td className="py-3 pr-3">{lastName}</td>
+                            <td className="py-3 pr-3">{user.email || '—'}</td>
+                            <td className="py-3 pr-3">{phone}</td>
+                            <td className="py-3">
+                              <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${isActive === true ? 'bg-emerald-500/15 text-emerald-400' : isActive === false ? 'bg-rose-500/15 text-rose-400' : 'bg-slate-800 text-slate-300'}`}>
+                                {statusLabel}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeSection === 'agents' && (
+            <section id="agents" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Agents</h2>
+                  <p className="mt-1 text-sm text-slate-400">Print agents created in the system.</p>
+                </div>
+                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{agents.length} agents</span>
+              </div>
+
+              {agentsLoading ? (
+                <p className="text-sm text-slate-400">Loading agents...</p>
+              ) : agentsError ? (
+                <p className="text-sm text-rose-400">{agentsError}</p>
+              ) : agents.length === 0 ? (
+                <p className="text-sm text-slate-400">No agents found.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[520px] divide-y divide-slate-800 text-sm">
+                    <thead>
+                      <tr className="text-left text-slate-400">
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent ID</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">API Key</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {agents.map((agent) => (
+                        <tr key={String(agent.id)} className="text-slate-300">
+                          <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{String(agent.id)}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{agent.location || '-'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap break-all text-ellipsis">{agent.api_key || agent.apiKey || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeSection === 'printers' && (
+            <section id="printers" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Printers</h2>
+                  <p className="mt-1 text-sm text-slate-400">Printer inventory and current status.</p>
+                </div>
+                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{printers.length} printers</span>
+              </div>
+
+              {printersLoading ? (
+                <p className="text-sm text-slate-400">Loading printers...</p>
+              ) : printersError ? (
+                <p className="text-sm text-rose-400">{printersError}</p>
+              ) : printers.length === 0 ? (
+                <p className="text-sm text-slate-400">No printers found.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[650px] divide-y divide-slate-800 text-sm">
+                    <thead>
+                      <tr className="text-left text-slate-400">
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Name</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">IP Address</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent Id</th>
+                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {printers.map((printer) => (
+                        <tr key={printer.printerId} className="text-slate-300">
+                          <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{printer.name || '-'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{printer.location || '-'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{printer.ip_address || '-'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{printer.agent_id || '-'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{printer.status || 'unknown'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      )}
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Users</h2>
