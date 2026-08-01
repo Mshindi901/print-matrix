@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { Activity, FileText, PlusCircle, Printer as PrinterIcon, Users, X } from 'lucide-react';
 import { apiService, getApiErrorMessage } from '../services/api';
 import type { Printer, PrintAgent, User } from '../types';

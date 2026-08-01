@@ -1,6 +1,6 @@
 // src/services/api.ts
 import axios from 'axios';
-import type { AuthResponse, Printer, PrintJob, User } from '../types';
+import type { AuthResponse, PrintAgent, Printer, PrintJob, User } from '../types';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
