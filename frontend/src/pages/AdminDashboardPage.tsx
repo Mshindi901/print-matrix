@@ -18,8 +18,16 @@ type AdminStatistics = {
 };
 
 const emptyStatistics: AdminStatistics = {
-  totalUsers: 0, activeUsers: 0, totalPrinters: 0, activePrinters: 0,
-  totalPrintJobs: 0, jobsToday: 0, jobsInQueue: 0, averagePrintTime: '—', successRate: '—', totalPagesPrinted: 0,
+  totalUsers: 0,
+  activeUsers: 0,
+  totalPrinters: 0,
+  activePrinters: 0,
+  totalPrintJobs: 0,
+  jobsToday: 0,
+  jobsInQueue: 0,
+  averagePrintTime: '—',
+  successRate: '—',
+  totalPagesPrinted: 0,
 };
 
 export const AdminDashboardPage = () => {
@@ -43,7 +51,10 @@ export const AdminDashboardPage = () => {
   const [printerError, setPrinterError] = useState('');
   const [agentError, setAgentError] = useState('');
   const [printerForm, setPrinterForm] = useState({
-    name: '', location: '', ipAddress: '', agentId: '',
+    name: '',
+    location: '',
+    ipAddress: '',
+    agentId: '',
   });
   const [agentForm, setAgentForm] = useState({ location: '' });
 
@@ -66,10 +77,8 @@ export const AdminDashboardPage = () => {
           }
 
           if (usersResult.status === 'fulfilled') {
-            console.log('Users response:', usersResult.value.data);
             setUsers(usersResult.value.data.data ?? []);
           } else {
-            console.error('Users fetch failed:', usersResult.reason);
             setUsersError('Unable to load users right now.');
           }
 
@@ -103,7 +112,9 @@ export const AdminDashboardPage = () => {
     };
 
     void loadDashboardData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const cards = [
@@ -158,28 +169,41 @@ export const AdminDashboardPage = () => {
           <p className="mt-1 text-sm text-slate-400">System-wide printing and usage overview.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={() => setShowAddAgent(true)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500">
+          <button
+            type="button"
+            onClick={() => setShowAddAgent(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
+          >
             <PlusCircle className="h-4 w-4" /> Add print agent
           </button>
-          <button type="button" onClick={() => setShowAddPrinter(true)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500">
+          <button
+            type="button"
+            onClick={() => setShowAddPrinter(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500"
+          >
             <PlusCircle className="h-4 w-4" /> Add printer
           </button>
         </div>
       </div>
+
       {error && <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">{error}</div>}
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-        {([
-          ['overview', 'Overview'],
-          ['users', 'Users'],
-          ['agents', 'Agents'],
-          ['printers', 'Printers'],
-        ] as const).map(([section, label]) => (
+        {(
+          [
+            ['overview', 'Overview'],
+            ['users', 'Users'],
+            ['agents', 'Agents'],
+            ['printers', 'Printers'],
+          ] as const
+        ).map(([section, label]) => (
           <button
             key={section}
             type="button"
             onClick={() => setActiveSection(section)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${activeSection === section ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-300 hover:bg-slate-900'}`}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              activeSection === section ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-300 hover:bg-slate-900'
+            }`}
           >
             {label}
           </button>
@@ -203,153 +227,8 @@ export const AdminDashboardPage = () => {
         </>
       )}
 
-      {activeSection !== 'overview' && (
-        <div className="grid gap-6 xl:grid-cols-3">
-          {activeSection === 'users' && (
-            <section id="users" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Users</h2>
-                  <p className="mt-1 text-sm text-slate-400">All registered users in the system.</p>
-                </div>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{users.length} users</span>
-              </div>
-
-              {usersLoading ? (
-                <p className="text-sm text-slate-400">Loading users...</p>
-              ) : usersError ? (
-                <p className="text-sm text-rose-400">{usersError}</p>
-              ) : users.length === 0 ? (
-                <p className="text-sm text-slate-400">No users found.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-800 text-sm">
-                    <thead>
-                      <tr className="text-left text-slate-400">
-                        <th className="pb-3 font-medium">first_name</th>
-                        <th className="pb-3 font-medium">last_name</th>
-                        <th className="pb-3 font-medium">email</th>
-                        <th className="pb-3 font-medium">Phone</th>
-                        <th className="pb-3 font-medium">is_active</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {users.map((user) => {
-                        const userRecord = user as User & Record<string, unknown>;
-                        const firstName = (userRecord.firstName as string | undefined) || (userRecord.first_name as string | undefined) || '—';
-                        const lastName = (userRecord.lastName as string | undefined) || (userRecord.last_name as string | undefined) || '—';
-                        const phone = (userRecord.phone as string | undefined) || '—';
-                        const isActive = userRecord.isActive ?? userRecord.is_active;
-                        const statusLabel = isActive === true ? 'Active' : isActive === false ? 'Inactive' : '—';
-
-                        return (
-                          <tr key={user.userId} className="text-slate-300">
-                            <td className="py-3 pr-3 font-medium text-white">{firstName}</td>
-                            <td className="py-3 pr-3">{lastName}</td>
-                            <td className="py-3 pr-3">{user.email || '—'}</td>
-                            <td className="py-3 pr-3">{phone}</td>
-                            <td className="py-3">
-                              <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${isActive === true ? 'bg-emerald-500/15 text-emerald-400' : isActive === false ? 'bg-rose-500/15 text-rose-400' : 'bg-slate-800 text-slate-300'}`}>
-                                {statusLabel}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          )}
-
-          {activeSection === 'agents' && (
-            <section id="agents" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Agents</h2>
-                  <p className="mt-1 text-sm text-slate-400">Print agents created in the system.</p>
-                </div>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{agents.length} agents</span>
-              </div>
-
-              {agentsLoading ? (
-                <p className="text-sm text-slate-400">Loading agents...</p>
-              ) : agentsError ? (
-                <p className="text-sm text-rose-400">{agentsError}</p>
-              ) : agents.length === 0 ? (
-                <p className="text-sm text-slate-400">No agents found.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[520px] divide-y divide-slate-800 text-sm">
-                    <thead>
-                      <tr className="text-left text-slate-400">
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent ID</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">API Key</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {agents.map((agent) => (
-                        <tr key={String(agent.id)} className="text-slate-300">
-                          <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{String(agent.id)}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{agent.location || '-'}</td>
-                          <td className="py-3 px-4 whitespace-nowrap break-all text-ellipsis">{agent.api_key || agent.apiKey || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          )}
-
-          {activeSection === 'printers' && (
-            <section id="printers" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Printers</h2>
-                  <p className="mt-1 text-sm text-slate-400">Printer inventory and current status.</p>
-                </div>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{printers.length} printers</span>
-              </div>
-
-              {printersLoading ? (
-                <p className="text-sm text-slate-400">Loading printers...</p>
-              ) : printersError ? (
-                <p className="text-sm text-rose-400">{printersError}</p>
-              ) : printers.length === 0 ? (
-                <p className="text-sm text-slate-400">No printers found.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[650px] divide-y divide-slate-800 text-sm">
-                    <thead>
-                      <tr className="text-left text-slate-400">
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Name</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">IP Address</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent Id</th>
-                        <th className="pb-3 px-4 font-medium whitespace-nowrap">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {printers.map((printer) => (
-                        <tr key={printer.printerId} className="text-slate-300">
-                          <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{printer.name || '-'}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{printer.location || '-'}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{printer.ip_address || '-'}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{printer.agent_id || '-'}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{printer.status || 'unknown'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          )}
-        </div>
-      )}
+      {activeSection === 'users' && (
+        <section id="users" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Users</h2>
@@ -369,11 +248,11 @@ export const AdminDashboardPage = () => {
               <table className="min-w-full divide-y divide-slate-800 text-sm">
                 <thead>
                   <tr className="text-left text-slate-400">
-                    <th className="pb-3 font-medium">first_name</th>
-                    <th className="pb-3 font-medium">last_name</th>
-                    <th className="pb-3 font-medium">email</th>
+                    <th className="pb-3 font-medium">First Name</th>
+                    <th className="pb-3 font-medium">Last Name</th>
+                    <th className="pb-3 font-medium">Email</th>
                     <th className="pb-3 font-medium">Phone</th>
-                    <th className="pb-3 font-medium">is_active</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
@@ -392,7 +271,11 @@ export const AdminDashboardPage = () => {
                         <td className="py-3 pr-3">{user.email || '—'}</td>
                         <td className="py-3 pr-3">{phone}</td>
                         <td className="py-3">
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${isActive === true ? 'bg-emerald-500/15 text-emerald-400' : isActive === false ? 'bg-rose-500/15 text-rose-400' : 'bg-slate-800 text-slate-300'}`}>
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                              isActive === true ? 'bg-emerald-500/15 text-emerald-400' : isActive === false ? 'bg-rose-500/15 text-rose-400' : 'bg-slate-800 text-slate-300'
+                            }`}
+                          >
                             {statusLabel}
                           </span>
                         </td>
@@ -404,8 +287,10 @@ export const AdminDashboardPage = () => {
             </div>
           )}
         </section>
+      )}
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      {activeSection === 'agents' && (
+        <section id="agents" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Agents</h2>
@@ -443,8 +328,10 @@ export const AdminDashboardPage = () => {
             </div>
           )}
         </section>
+      )}
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+      {activeSection === 'printers' && (
+        <section id="printers" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Printers</h2>
@@ -467,7 +354,7 @@ export const AdminDashboardPage = () => {
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">Name</th>
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">IP Address</th>
-                    <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent Id</th>
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent ID</th>
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -486,24 +373,50 @@ export const AdminDashboardPage = () => {
             </div>
           )}
         </section>
-      </div>
+      )}
 
       {showAddPrinter && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-4">
           <form onSubmit={addPrinter} className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
             <div className="mb-5 flex items-start justify-between gap-4">
-              <div><h2 className="text-lg font-semibold text-white">Add printer</h2><p className="mt-1 text-sm text-slate-400">Register a printer for the system.</p></div>
-              <button type="button" onClick={() => setShowAddPrinter(false)} className="p-1 text-slate-400 hover:text-white"><X className="h-5 w-5" /></button>
+              <div>
+                <h2 className="text-lg font-semibold text-white">Add printer</h2>
+                <p className="mt-1 text-sm text-slate-400">Register a printer for the system.</p>
+              </div>
+              <button type="button" onClick={() => setShowAddPrinter(false)} className="p-1 text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
             </div>
             {printerError && <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{printerError}</div>}
             <div className="grid gap-4 sm:grid-cols-2">
-              {([
-                ['name', 'Printer name', 'text'], ['location', 'Location', 'text'], ['ipAddress', 'IP address', 'text'], ['agentId', 'Printer agent ID', 'text'],
-              ] as const).map(([field, label, type]) => (
-                <label key={field} className="text-sm text-slate-300"><span className="mb-1 block">{label}</span><input required type={type} value={printerForm[field]} onChange={(event) => setPrinterForm({ ...printerForm, [field]: event.target.value })} className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white" /></label>
+              {(
+                [
+                  ['name', 'Printer name', 'text'],
+                  ['location', 'Location', 'text'],
+                  ['ipAddress', 'IP address', 'text'],
+                  ['agentId', 'Printer agent ID', 'text'],
+                ] as const
+              ).map(([field, label, type]) => (
+                <label key={field} className="text-sm text-slate-300">
+                  <span className="mb-1 block">{label}</span>
+                  <input
+                    required
+                    type={type}
+                    value={printerForm[field]}
+                    onChange={(event) => setPrinterForm({ ...printerForm, [field]: event.target.value })}
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white"
+                  />
+                </label>
               ))}
             </div>
-            <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setShowAddPrinter(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">Cancel</button><button disabled={savingPrinter} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{savingPrinter ? 'Adding...' : 'Add printer'}</button></div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => setShowAddPrinter(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">
+                Cancel
+              </button>
+              <button disabled={savingPrinter} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                {savingPrinter ? 'Adding...' : 'Add printer'}
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -512,8 +425,13 @@ export const AdminDashboardPage = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-4">
           <form onSubmit={addAgent} className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl">
             <div className="mb-5 flex items-start justify-between gap-4">
-              <div><h2 className="text-lg font-semibold text-white">Add print agent</h2><p className="mt-1 text-sm text-slate-400">Create a new print agent location.</p></div>
-              <button type="button" onClick={() => setShowAddAgent(false)} className="p-1 text-slate-400 hover:text-white"><X className="h-5 w-5" /></button>
+              <div>
+                <h2 className="text-lg font-semibold text-white">Add print agent</h2>
+                <p className="mt-1 text-sm text-slate-400">Create a new print agent location.</p>
+              </div>
+              <button type="button" onClick={() => setShowAddAgent(false)} className="p-1 text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
             </div>
             {agentError && <div className="mb-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{agentError}</div>}
             <label className="text-sm text-slate-300 block">
@@ -526,7 +444,14 @@ export const AdminDashboardPage = () => {
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               />
             </label>
-            <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setShowAddAgent(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">Cancel</button><button disabled={savingAgent} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{savingAgent ? 'Adding...' : 'Add agent'}</button></div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => setShowAddAgent(false)} className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300">
+                Cancel
+              </button>
+              <button disabled={savingAgent} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                {savingAgent ? 'Adding...' : 'Add agent'}
+              </button>
+            </div>
           </form>
         </div>
       )}
