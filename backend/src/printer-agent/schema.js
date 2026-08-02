@@ -27,6 +27,6 @@ const Print_Agent  = sequelize.define('printer_agents', {
         defaultValue:'pending',
         allowNull: false
     }
-}, {timestamps:true});
+}, {timestamps:true, underscored:true});
 
 export default Print_Agent;
