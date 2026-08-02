@@ -1,10 +1,17 @@
 import Print_Agent from "./schema.js";
 import crypto from 'crypto';
 
-const sanitizeAgent = (agentInstance) => {
-    const agent = agentInstance.get({ plain: true });
-    const { api_key: hashedApiKey, plain_api_key, ...safeAgent } = agent;
-    return { ...safeAgent, api_key: plain_api_key, apiKey: plain_api_key };
+const sanitizeAgent = (agent) => {
+  const plain = agent.get ? agent.get({ plain: true }) : agent;
+  return {
+    id: plain.id,
+    location: plain.location,
+    status: plain.status,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
+    api_key: plain.api_key,
+    plain_api_key: plain.plain_api_key
+  };
 };
 
 export const new_agent = async (req, res) => {
