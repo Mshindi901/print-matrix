@@ -14,12 +14,17 @@ export async function agentAuth(req, res, next) {
     return res.status(401).json({ success: false, message: 'Not an agent id' });
   }
 
-  // Hash the incoming key
-  const received_key = crypto.createHash('sha256').update(apiKey).digest('hex');
+  // Accept either a plain text API key or a pre-hashed SHA-256 hex API key.
+  let receivedKeyHex;
+  const hexKeyPattern = /^[a-fA-F0-9]{64}$/;
+  if (hexKeyPattern.test(apiKey)) {
+    receivedKeyHex = apiKey.toLowerCase();
+  } else {
+    receivedKeyHex = crypto.createHash('sha256').update(apiKey).digest('hex');
+  }
 
-  // Ensure buffers exist and have matching byte lengths before comparison
-  const bufReceived = Buffer.from(received_key, 'hex');
-  const bufStored = Buffer.from(is_agent.api_key || '', 'hex'); // Assuming is_agent.apiKey is a hex hash
+  const bufReceived = Buffer.from(receivedKeyHex, 'hex');
+  const bufStored = Buffer.from(is_agent.api_key || '', 'hex');
 
   if (bufReceived.length !== bufStored.length || !crypto.timingSafeEqual(bufReceived, bufStored)) {
     return res.status(401).json({ success: false, message: 'Invalid Api key' });

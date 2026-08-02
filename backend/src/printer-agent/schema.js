@@ -17,6 +17,11 @@ const Print_Agent  = sequelize.define('printer_agents', {
         type:DataTypes.STRING,
         allowNull:false
     },
+    plain_api_key:{
+        type:DataTypes.STRING,
+        allowNull:false,
+        unique:true
+    },
     status:{
         type:DataTypes.ENUM('printing', 'completed', 'pending'),
         defaultValue:'pending',

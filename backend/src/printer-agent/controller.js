@@ -1,22 +1,36 @@
 import Print_Agent from "./schema.js";
 import crypto from 'crypto';
 
+const sanitizeAgent = (agentInstance) => {
+    const agent = agentInstance.get({ plain: true });
+    const { api_key: hashedApiKey, plain_api_key, ...safeAgent } = agent;
+    return { ...safeAgent, api_key: plain_api_key, apiKey: plain_api_key };
+};
+
 export const new_agent = async (req, res) => {
     try {
         const {location} = req.body;
         if(!location){
             return res.status(400).json({success:false,message:'Provide location name'});
         };
-        const api_key =  crypto.randomBytes(32).toString('hex');
+
+        const api_key = crypto.randomBytes(32).toString('hex');
         const hashed_api_key = crypto.createHash('sha256').update(api_key).digest('hex');
         const new_print_agent = await Print_Agent.create({
             location,
-            api_key: hashed_api_key
+            api_key: hashed_api_key,
+            plain_api_key: api_key
         });
+
         if(!new_print_agent){
             return res.status(400).json({success:false,message:'Failed to create a new Print agent record'});
         };
-        return res.status(201).json({success:true,message:'New Print agent record added', data:new_print_agent});
+
+        return res.status(201).json({
+            success:true,
+            message:'New Print agent record added',
+            data:sanitizeAgent(new_print_agent)
+        });
     } catch (error) {
         return res.status(500).json({success:false,message:'Internal Server Error',error:error})
     }
@@ -32,7 +46,7 @@ export const get_agent = async(req, res) => {
         if(!agent){
             return res.status(400).json({success:false,message:'No agent found'});
         };
-        return res.status(200).json({success:true,message:'Agent Fetched',data:agent});
+        return res.status(200).json({success:true,message:'Agent Fetched',data:sanitizeAgent(agent)});
     } catch (error) {
         return res.status(500).json({success:false,message:'Internal Server Error',error:error})
     }
@@ -41,10 +55,8 @@ export const get_agent = async(req, res) => {
 export const get_all_agents = async(req, res) => {
     try {
         const agents = await Print_Agent.findAll();
-        if (!agents) {
-            return res.status(200).json({ success: true, message: 'Agents fetched', data: [] });
-        }
-        return res.status(200).json({ success: true, message: 'Agents fetched', data: agents });
+        const safeAgents = agents.map(sanitizeAgent);
+        return res.status(200).json({ success: true, message: 'Agents fetched', data: safeAgents });
     } catch (error) {
         console.error('Fetching agents failed:', error);
         return res.status(500).json({ success: false, message: 'Internal Server Error', error });
@@ -61,7 +73,7 @@ export const get_agent_name = async(req, res) => {
         if(!agent){
             return res.status(400).json({success:false,message:'Agent Not Found'})
         };
-        return res.status(200).json({success:true,message:"Agent Fetched",data:agent});
+        return res.status(200).json({success:true,message:"Agent Fetched",data:sanitizeAgent(agent)});
     } catch (error) {
         return res.status(500).json({success:false,message:'Internal Server Error',error:error})
     }
