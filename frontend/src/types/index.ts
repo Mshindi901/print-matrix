@@ -22,6 +22,7 @@ export interface PrintAgent {
   location: string;
   apiKey?: string;
   api_key?: string;
+  plain_api_key?: string;
   createdAt?: string;
   updatedAt?: string;
 }

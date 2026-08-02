@@ -312,7 +312,8 @@ export const AdminDashboardPage = () => {
                   <tr className="text-left text-slate-400">
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">Agent ID</th>
                     <th className="pb-3 px-4 font-medium whitespace-nowrap">Location</th>
-                    <th className="pb-3 px-4 font-medium whitespace-nowrap">API Key</th>
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">Encrypted Key</th>
+                    <th className="pb-3 px-4 font-medium whitespace-nowrap">API KEY</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
@@ -320,7 +321,8 @@ export const AdminDashboardPage = () => {
                     <tr key={String(agent.id)} className="text-slate-300">
                       <td className="py-3 px-4 font-medium text-white whitespace-nowrap">{String(agent.id)}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{agent.location || '-'}</td>
-                      <td className="py-3 px-4 whitespace-nowrap break-all text-ellipsis">{agent.api_key || agent.apiKey || '-'}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{agent.api_key || '-'}</td>
+                      <td className="py-3 px-4 whitespace-nowrap break-all text-ellipsis">{agent.plain_api_key|| '-'}</td>
                     </tr>
                   ))}
                 </tbody>
