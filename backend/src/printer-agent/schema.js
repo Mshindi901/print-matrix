@@ -19,7 +19,7 @@ const Print_Agent  = sequelize.define('printer_agents', {
     },
     plain_api_key:{
         type:DataTypes.STRING,
-        allowNull:false,
+        allowNull:true,
         unique:true
     },
     status:{
